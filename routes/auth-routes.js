@@ -1,5 +1,9 @@
 const express = require("express");
 const authRoutes = express.Router();
+const ensureLogin = require("connect-ensure-login");
+
+// Passport Configuration
+const passport = require("passport");
 
 // User Model
 const User = require("../models/user");
@@ -44,7 +48,7 @@ authRoutes.post("/signup", (req, res, next) => {
         });
 
         // Save the new User to the database
-        newSave.save((err) => {
+        newUser.save((err) => {
             if (err) {
                 res.render("auth/signup", { message: "Something went wrong" });
             } else {
@@ -52,6 +56,28 @@ authRoutes.post("/signup", (req, res, next) => {
             }
         });
     });
+});
+
+// Route to Display Login Form
+authRoutes.get("/login", (req, res, next) => {
+    res.render("auth/login", { "message": req.flash("error") });
+});
+
+// Route to Handle Login Form Submission
+authRoutes.post("/login", passport.authenticate("local", {
+    successRedirect: "/",
+    failureRedirect: "/login",
+    failureFlash: true,
+    passReqToCallback: true
+}));
+
+authRoutes.get("/private-page", ensureLogin.ensureLoggedIn(), (req, res) => {
+    res.render("private", { user: req.user })
+});
+
+authRoutes.get("/logout", (req, res) => {
+    req.logout();
+    res.redirection("/login");
 });
 
 module.exports = authRoutes;
