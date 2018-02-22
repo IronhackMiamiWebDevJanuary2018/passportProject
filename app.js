@@ -12,6 +12,64 @@ const passport = require("passport");
 const LocalStrategy = require("passport-local").Strategy;
 const flash = require("connect-flash");
 
+// OAuth Configuration - Facebook
+const FbStrategy = require('passport-facebook').Strategy;
+
+passport.use(new FbStrategy ({
+  clientID: "170024690452119",
+  clientSecret: "eb95201c67f2691c8f5641621b4a4915",
+  callbackURL: "/auth/facebook/callback"
+}, (accessToken, refreshToken, profile, done) => {
+  User.findOne({facebookID: profile.id }, (err, user) => {
+    if (err) {
+      return done(err);
+    }
+    if (user) {
+      return done(null, user);
+    }
+
+    const newUser = new User({
+      facebookID: profile.id
+    });
+
+    newUser.save((err) => {
+      if (err) {
+        return done(err);
+      }
+      done(null, newUser);
+    });
+  });
+}));
+
+// OAuth Configuration - Google
+const GoogleStrategy = require("passport-google-oauth").OAuth2Strategy;
+
+passport.use(new GoogleStrategy({
+  clientID: "570760147536-fcb82ci4bqg904e3vkeqggmi93qjpurr.apps.googleusercontent.com",
+  clientSecret: "xW7WnffjTNcBILXhMGk6X6Jp",
+  callbackURL: "/auth/google/callback"
+}, (accessToken, refreshToken, profile, done) => {
+  User.findOne({ googleID: profile.id }, (err, user) => {
+    if (err) {
+      return done(err)
+    }
+    if (user) {
+      return done(null, user);
+    }
+
+    const newUser = new User({
+      googleID: profile.id
+    });
+
+    newUser.save((err) => {
+      if (err) {
+        return done(err)
+      }
+      done(null, newUser);
+    });
+  });
+}));
+
 const User = require("./models/user");
 
 var index = require('./routes/index');
